@@ -4,7 +4,8 @@ const schema=mongoose.Schema({
     "incredientsr":{type:String,required:true},
     "titler":{type:String,required:true},
     "descriptionr":{type:String,required:true},
-    "typer":{type:String,required:true}
+    "typer":{type:String,required:true},
+    userId:{type: mongoose.Schema.Types.ObjectId,ref: "agric"},
 })
 
 let recipemodel=mongoose.model("recipeagri",schema);

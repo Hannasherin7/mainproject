@@ -64,9 +64,32 @@ const deleteuser = async  (req, res) => {
         });
 }
 
+const userProfile = async (req, res) => {
+    try {
+        
+        if (!req.user || !req.user.id) {
+            return res.status(403).json({ message: "Unauthorized access" });
+        }
+
+        
+        const user = await agrimodel.findById(req.user.id).select("-password -cpassword");
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({ status: "success", user });
+    } catch (error) {
+        console.error("Error fetching user profile:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+  };
+  
+  
 module.exports = {
     viewsign,
     getUserDetails,
     deleteuserid,
-    deleteuser
+    deleteuser,
+    userProfile
 }

@@ -1,42 +1,75 @@
-const complaintmodel =require("../models/complaint");
 
-// POST route to add complaints
-const addcom = async (req, res) => {
-    const { complaint } = req.body; // Only extract complaint
+const complaintmodel = require('../models/complaint');
+const agrimodel=require('../models/agri')
+const mongoose = require("mongoose");
 
-    // Validate input
-    if (!complaint) {
-        return res.status(400).json({ status: "error", message: "Complaint is required" });
+const complaints = async (req, res) => {
+    try {
+        let input = req.body;
+        // Convert to ObjectId before saving
+        input.userid = mongoose.Types.ObjectId(req.user.id);
+        let newComplaint = new complaintmodel(input); 
+        await newComplaint.save(); 
+        console.log(newComplaint);
+        res.json({ status: "success", data: newComplaint });
+    } catch (error) {
+        console.error("Error saving complaint:", error);
+        res.status(500).json({ status: "error", message: error.message });
     }
+};
 
-    // Create a new complaint document
-    const newComplaint = new complaintmodel({
-        complaint: complaint,
-        // Removed datec from the document
-    });
+const complaintList = async (req, res) => {
+    try {
+        const data = await complaintmodel.find().populate('userid','Name' ).exec();
+        console.log(data);
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ status: "error", message: error.message });
+    }
+};
 
-    // Save the complaint to the database
-    newComplaint.save()
-        .then(() => {
-            res.json({ status: "success", message: "Complaint registered successfully" });
-        })
-        .catch((error) => {
-            console.error("Error saving complaint:", error);
-            res.status(500).json({ status: "error", message: "Failed to register complaint" });
+
+const ownComplaint = async (req, res) => {
+    try {
+        console.log("User ID from token:", req.user.id);
+
+        // Convert the string ID to an ObjectId
+        const userId = new mongoose.Types.ObjectId(req.user.id);
+
+        const complaints = await complaintmodel.find({ 
+            userid: userId
         });
-}
 
+        console.log("Complaints Found:", complaints); 
 
+        res.status(200).json({ 
+            status: "success",  
+            complaints 
+        });
+    } catch (error) {
+        console.error("Error fetching user complaints:", error);
+        res.status(500).json({ status: "error", message: "Internal server error" });
+    }
+};
+const updateComplaintStatus = async (req, res) => {
+    const { _id, status } = req.body;
+    try {
+      await complaintmodel.findByIdAndUpdate(_id, { status });
+      res.json({ status: "success", message: "Complaint status updated successfully" });
+    } catch (error) {
+      res.json({ status: "error", message: "Failed to update status" });
+    }
+  }
 
-const viewcom = async (req,res)=>{
-    complaintmodel.find().then((data)=>{
-        res.json(data)
-    }).catch((error)=>{
-        res.json(error)
-    })
-}
+const deleteComplaint = async (req, res) => {
+    try {
+        let input = req.body;
+        await complaintmodel.findByIdAndDelete(input._id);
+        res.json({ status: "success" });
+    } catch (error) {
+        res.status(500).json({ status: "error", message: error.message });
+    }
+};
 
-module.exports = {
-    addcom,
-    viewcom
-}
+module.exports = { complaints, complaintList, deleteComplaint,ownComplaint,updateComplaintStatus };
+
