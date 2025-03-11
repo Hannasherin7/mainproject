@@ -4,49 +4,72 @@ const Order=require("../models/buy");
 const agric=require("../models/agri")
 
 
-
-
 // const addpro = async (req, res) => {
 //     try {
-//         const input = req.body;
+//         console.log(req.files);
+
+//         let input = req.body;
+
+//         // Handling file upload
+//         req.files?.forEach((item) => {
+//             input.image = `uploads/${item?.filename}`;
+//         });
+
 //         input.userId = new mongoose.Types.ObjectId(req.user.id);
+//         console.log(input);
+
+//         if (!input.pname || !input.discription || !input.price || !input.quantity || !input.image) {
+//             return res.status(400).json({ status: "error", message: "All fields are required" });
+//         }
+
 //         const product = new Product(input);
 //         await product.save();
-//         console.log("Product added:", product);
-//         res.json({ status: "success", data: product });
+
+//         res.status(201).json({ status: "success", data: product });
 //     } catch (error) {
 //         console.error("Error adding product:", error);
 //         res.status(500).json({ status: "error", message: error.message });
 //     }
 // };
+
+
 const addpro = async (req, res) => {
-    try {
-        console.log(req.files);
+  try {
+      console.log(req.files);
 
-        let input = req.body;
+      let input = req.body;
 
-        // Handling file upload
-        req.files?.forEach((item) => {
-            input.image = `uploads/${item?.filename}`;
-        });
+      // Handling file upload
+      req.files?.forEach((item) => {
+          input.image = `uploads/${item?.filename}`;
+      });
 
-        input.userId = new mongoose.Types.ObjectId(req.user.id);
-        console.log(input);
+      input.userId = new mongoose.Types.ObjectId(req.user.id);
+      console.log(input);
 
-        if (!input.pname || !input.discription || !input.price || !input.quantity || !input.image) {
-            return res.status(400).json({ status: "error", message: "All fields are required" });
-        }
+      const price = parseFloat(input.price); // Ensure price is treated as a number
+      const discountPercentage = parseFloat(input.discountPercentage) || 0; // Ensure discountPercentage is treated as a number
 
-        const product = new Product(input);
-        await product.save();
+      // Calculate discounted price
+      const discountedPrice = discountPercentage 
+          ? price - (price * (discountPercentage / 100))
+          : price;
 
-        res.status(201).json({ status: "success", data: product });
-    } catch (error) {
-        console.error("Error adding product:", error);
-        res.status(500).json({ status: "error", message: error.message });
-    }
+      input.discountedPrice = discountedPrice; // Add discounted price to input
+
+      if (!input.pname || !input.discription || !input.price || !input.quantity || !input.image) {
+          return res.status(400).json({ status: "error", message: "All fields are required" });
+      }
+
+      const product = new Product(input);
+      await product.save();
+
+      res.status(201).json({ status: "success", data: product });
+  } catch (error) {
+      console.error("Error adding product:", error);
+      res.status(500).json({ status: "error", message: error.message });
+  }
 };
-
 
 
 // Search products route
@@ -154,21 +177,27 @@ const viewpro2 =  async (req, res) => {
 }
 
 const soldproductsuserId = async (req, res) => {
+  const { userId } = req.params;
 
-    
-    const { userId } = req.params;
+  try {
+      const products = await Product.find({ userId: userId })
+      .populate('feedbacks').populate({ 
+        path: 'feedbacks',
+        populate: {
+          path: 'userId',
+        } 
+     }).exec();
+          
 
-    Product.find({ userId: userId }) 
-        .then((products) => {
-            if (!products.length) {
-                return res.status(404).json({ status: "error", message: "No sold products found." });
-            }
-            res.json({ status: "success", products });
-        })
-        .catch((error) => {
-            console.error("Error fetching sold products:", error);
-            res.status(500).json({ status: "error", message: error.message });
-        });
+      if (!products.length) {
+          return res.status(404).json({ status: "error", message: "No sold products found." });
+      }
+
+      res.json({ status: "success", products });
+  } catch (error) {
+      console.error("Error fetching sold products:", error);
+      res.status(500).json({ status: "error", message: error.message });
+  }
 }
 
 const checkeligibility = async (req, res) => {

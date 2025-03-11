@@ -52,24 +52,37 @@ const viewpro = async (req, res) => {
 
 const soldproduct = async (req, res) => {
     try {
-        const userId = req.query.userId; // Get userId from request query
-        if (!userId) {
-            return res.status(400).json({ error: "User ID is required" });
-        }
-
-        // Find products where userId matches the seller's ID
-        const products = await Product.find({ userId: userId });
-        
-        if (products.length === 0) {
-            return res.status(404).json({ error: "No sold products found for this user." });
-        }
-
-        res.json(products);
+      const userId = req.query.userId; // Get userId from request query
+      if (!userId) {
+        return res.status(400).json({ error: "User ID is required" });
+      }
+  
+      // Find products where userId matches the seller's ID
+      const products = await Product.find({ userId: userId })
+        .populate({
+          path: "feedbacks",
+          populate: {
+            path: "userId",
+          },
+        })
+        .populate({
+          path: "complaints",
+          populate: {
+            path: "userId",
+          },
+        })
+        .exec();
+  
+      if (products.length === 0) {
+        return res.status(404).json({ error: "No sold products found for this user." });
+      }
+  
+      res.json(products);
     } catch (error) {
-        console.error("Error fetching sold products:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+      console.error("Error fetching sold products:", error);
+      res.status(500).json({ error: "Internal Server Error" });
     }
-};
+  };
 
 
 const recievedorders = async (req, res) => {

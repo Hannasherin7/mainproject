@@ -47,10 +47,10 @@ const submitfeedback = async (req, res) => {
 
 
 const getUserFeedbacks = async (req, res) => {
-  const userId = req.user.id; // Assuming the user ID is available in the request (from authentication middleware)
+  const userId = req.user.id; 
 
   try {
-    // Find all feedbacks submitted by the user
+   
     const feedbacks = await Feedback.find({ userId }).populate("productId");
 
     res.json({ feedbacks });

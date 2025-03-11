@@ -6,10 +6,14 @@ const FarmerSchema = new mongoose.Schema({
     phone: { type: String, required: true, trim: true },
     idProof: { type: String, required: true }, 
     termsAccepted: { type: Boolean, required: true },
-    category: [{ type: String, required: true }],
+    category: [{ type: String}],
     status:{type:String,require:true,default:"pending"},
-    
+    productype: { type: String, required: true },
     user:{type: mongoose.Schema.Types.ObjectId,ref: "agric"},
+    seedcategory:[ { type: String}],
+    fertilizercategory:[ { type: String}],
+    productype: { type: String, required: true },
+
 }, { timestamps: true });
 
 FarmerSchema.index({ email: 1 }); 

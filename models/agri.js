@@ -7,6 +7,7 @@ const schema = mongoose.Schema({
     "gender": { type: String,  },
     "password": { type: String, required: true },
     "cpassword": { type: String,  },
+    "usertype": { type: String, required: true},
     isAdmin: { type: Boolean, require: true, default: false }
 })
 

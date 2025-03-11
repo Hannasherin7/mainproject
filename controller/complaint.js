@@ -1,75 +1,70 @@
-
-const complaintmodel = require('../models/complaint');
-const agrimodel=require('../models/agri')
+const ComplaintModel = require('../models/complaint');
 const mongoose = require("mongoose");
 
-const complaints = async (req, res) => {
+const createComplaint = async (req, res) => {
     try {
+        console.log(req.files); 
+
         let input = req.body;
-        // Convert to ObjectId before saving
-        input.userid = mongoose.Types.ObjectId(req.user.id);
-        let newComplaint = new complaintmodel(input); 
-        await newComplaint.save(); 
-        console.log(newComplaint);
-        res.json({ status: "success", data: newComplaint });
+
+        
+        if (req.files && req.files.length > 0) {
+            input.image = `uploads/${req.files[0].filename}`; 
+        }
+
+        input.userid = new mongoose.Types.ObjectId(req.user.id); 
+        console.log(input); 
+
+        if (!input.name || !input.email || !input.phoneNumber || !input.complaint || !input.resolutionRequest) {
+            return res.status(400).json({ status: "error", message: "All fields are required" });
+        }
+
+        const newComplaint = new ComplaintModel(input);
+        await newComplaint.save();
+
+        res.status(201).json({ status: "success", data: newComplaint });
     } catch (error) {
-        console.error("Error saving complaint:", error);
+        console.error("Error creating complaint:", error);
         res.status(500).json({ status: "error", message: error.message });
     }
 };
-
-const complaintList = async (req, res) => {
+const getComplaints = async (req, res) => {
     try {
-        const data = await complaintmodel.find().populate('userid','Name' ).exec();
-        console.log(data);
+        const data = await ComplaintModel.find().populate('userid', 'Name').exec();
         res.json(data);
     } catch (error) {
         res.status(500).json({ status: "error", message: error.message });
     }
 };
 
-
-const ownComplaint = async (req, res) => {
+const getOwnComplaints = async (req, res) => {
     try {
-        console.log("User ID from token:", req.user.id);
-
-        // Convert the string ID to an ObjectId
         const userId = new mongoose.Types.ObjectId(req.user.id);
-
-        const complaints = await complaintmodel.find({ 
-            userid: userId
-        });
-
-        console.log("Complaints Found:", complaints); 
-
-        res.status(200).json({ 
-            status: "success",  
-            complaints 
-        });
+        const complaints = await ComplaintModel.find({ userid: userId });
+        res.status(200).json({ status: "success", complaints });
     } catch (error) {
-        console.error("Error fetching user complaints:", error);
         res.status(500).json({ status: "error", message: "Internal server error" });
     }
 };
+
 const updateComplaintStatus = async (req, res) => {
-    const { _id, status } = req.body;
+    const { _id, status, adminMessage } = req.body;
     try {
-      await complaintmodel.findByIdAndUpdate(_id, { status });
-      res.json({ status: "success", message: "Complaint status updated successfully" });
+        await ComplaintModel.findByIdAndUpdate(_id, { status, adminMessage });
+        res.json({ status: "success", message: "Complaint status updated successfully" });
     } catch (error) {
-      res.json({ status: "error", message: "Failed to update status" });
+        res.json({ status: "error", message: "Failed to update status" });
     }
-  }
+};
 
 const deleteComplaint = async (req, res) => {
     try {
-        let input = req.body;
-        await complaintmodel.findByIdAndDelete(input._id);
+        const { _id } = req.body;
+        await ComplaintModel.findByIdAndDelete(_id);
         res.json({ status: "success" });
     } catch (error) {
         res.status(500).json({ status: "error", message: error.message });
     }
 };
 
-module.exports = { complaints, complaintList, deleteComplaint,ownComplaint,updateComplaintStatus };
-
+module.exports = { createComplaint, getComplaints, getOwnComplaints, updateComplaintStatus, deleteComplaint };

@@ -36,15 +36,21 @@ const login = async (req, res) => {
             return res.status(200).json(passwordError); 
         }
 
-        const token = generatetoken({ email, id: user?._id, isAdmin: user?.isAdmin })
-        res.json({ status: "Success", userid: user._id, token, name: user?.name,email: user?.email, isAdmin: user?.isAdmin || "false" });
+        const token = generatetoken({ email, id: user?._id, isAdmin: user?.isAdmin });
+        res.json({ 
+            status: "Success", 
+            userid: user._id, 
+            token, 
+            name: user?.name, 
+            email: user?.email, 
+            isAdmin: user?.isAdmin || "false", 
+            usertype: user?.usertype 
+        });
     } catch (error) {
         console.error("Sign-in error:", error);
         res.status(500).json({ status: "Error", message: "An error occurred. Please try again." });
     }
 };
-
-
 
 module.exports = {
     login,

@@ -13,8 +13,7 @@ const orderSchema = new mongoose.Schema({
     date: { type: Date, default: Date.now },
      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'agric' },
      "status":{type:String,require:true,default:"Order placed"},
-     
-    
+     createdAt: {type: Date,default: Date.now,},
 });
 
 // Define Product Schema
