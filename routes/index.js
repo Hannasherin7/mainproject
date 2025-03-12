@@ -13,6 +13,7 @@ const blogcontroller = require("../controller/blog");
 const sellercontroller=require("../controller/seller")
 const buyercomplaint=require("../controller/buyercomplaint")
 const announcement=require("../controller/Announcement")
+const adminActivities=require("../controller/adminactivity")
 const multer = require("multer");
 const authMiddleware = require('../middeware/auth')
 const path = require('path');
@@ -132,6 +133,10 @@ router.post('/announcements/:announcementId/comments/:commentId/like',authMiddle
 
 router.get('/seller/activities',authMiddleware.loginRequird,sellercontroller.selleractivities)
 router.get('/seller/stats',authMiddleware.loginRequird,sellercontroller.sellerstats)
+
+
+
+router.get('/admin/activities',authMiddleware.loginRequird,adminActivities.adminActivities)
 
 
 

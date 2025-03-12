@@ -12,7 +12,7 @@ const submitComplaint = async (req, res) => {
     // Check if the user has already submitted a complaint for this product
     const existingComplaint = await Complaint.findOne({ userId, productId });
     if (existingComplaint) {
-      return res.status(400).json({ message: "You have already submitted a complaint for this product." });
+      return res.status(400).json({ message: "You have already submitted a complaint for this product. If you want to know about your complaint, please go to your complaints." });
     }
 
     // Validate required fields
@@ -153,35 +153,55 @@ const updateComplaintStatus = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+const checkExistingComplaint = async (req, res) => {
+  const { userId, productId } = req.query;
 
-const checkExistingComplaint = async (userId, productId) => {
+  console.log("Received userId:", userId);
   console.log("Received productId:", productId);
   console.log("Type of productId:", typeof productId);
 
-  if (!productId) {
-    console.error("productId is missing or undefined");
-    throw new Error("productId is required");
+  try {
+    // If productId is undefined or null, throw an error
+    if (!productId) {
+      console.error("productId is missing or undefined");
+      return res.status(400).json({ message: "productId is required" });
+    }
+
+    // If productId is an object, extract the correct value
+    if (typeof productId === "object" && productId !== null) {
+      productId = productId._id || productId.id || productId.productId; // Adjust based on the actual structure
+    }
+
+    // Ensure productId is a string
+    const productIdString = String(productId);
+
+    // Trim and sanitize the productId
+    const sanitizedProductId = productIdString.trim();
+    console.log("Sanitized productId:", sanitizedProductId);
+
+    // Check if productId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(sanitizedProductId)) {
+      console.error("Invalid productId:", sanitizedProductId);
+      return res.status(400).json({ message: "Invalid productId" });
+    }
+
+    // Convert productId to ObjectId
+    const productObjectId = new mongoose.Types.ObjectId(sanitizedProductId);
+
+    // Check for existing complaint for the specific user and product
+    const existingComplaint = await Complaint.findOne({
+      userId: userId,
+      productId: productObjectId,
+    });
+
+    const hasExistingComplaint = existingComplaint !== null;
+
+    res.status(200).json({ hasExistingComplaint });
+  } catch (error) {
+    console.error("Error checking existing complaint:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
-
-  if (typeof productId !== "string") {
-    console.error("productId is not a string:", productId);
-    throw new Error("productId must be a string");
-  }
-
-  const sanitizedProductId = productId.trim();
-  console.log("Sanitized productId:", sanitizedProductId);
-
-  if (!mongoose.Types.ObjectId.isValid(sanitizedProductId)) {
-    console.error("Invalid productId:", sanitizedProductId);
-    throw new Error("Invalid productId");
-  }
-
-  const productObjectId = new mongoose.Types.ObjectId(sanitizedProductId);
-  const existingComplaint = await Complaint.findOne({ userId, productId: productObjectId });
-  return existingComplaint !== null;
 };
-
-
 module.exports = {
   submitComplaint,
   getUserComplaints,
