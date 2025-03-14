@@ -32,7 +32,6 @@ const agric=require("../models/agri")
 //     }
 // };
 
-
 const addpro = async (req, res) => {
   try {
       console.log(req.files);
@@ -51,7 +50,7 @@ const addpro = async (req, res) => {
       const discountPercentage = parseFloat(input.discountPercentage) || 0; // Ensure discountPercentage is treated as a number
 
       // Calculate discounted price
-      const discountedPrice = discountPercentage 
+      const discountedPrice = discountPercentage
           ? price - (price * (discountPercentage / 100))
           : price;
 
@@ -59,6 +58,11 @@ const addpro = async (req, res) => {
 
       if (!input.pname || !input.discription || !input.price || !input.quantity || !input.image) {
           return res.status(400).json({ status: "error", message: "All fields are required" });
+      }
+
+      // Parse deliveryZones if provided
+      if (input.deliveryZones) {
+          input.deliveryZones = JSON.parse(input.deliveryZones);
       }
 
       const product = new Product(input);
@@ -71,6 +75,31 @@ const addpro = async (req, res) => {
   }
 };
 
+
+const checkavailability = async (req, res) => {
+  try {
+      const { productId, postalCode } = req.body;
+
+      // Find the product by ID
+      const product = await Product.findById(productId);
+
+      if (!product) {
+          return res.status(404).json({ status: "error", message: "Product not found" });
+      }
+
+      // Check if the postal code is in the product's deliveryZones
+      const isAvailable = product.deliveryZones.includes(postalCode);
+
+      if (isAvailable) {
+          return res.status(200).json({ status: "success", message: "Product is available in your location." });
+      } else {
+          return res.status(200).json({ status: "error", message: "Product is not available in your location." });
+      }
+  } catch (error) {
+      console.error("Error checking product availability:", error);
+      res.status(500).json({ status: "error", message: error.message });
+  }
+};
 
 // Search products route
 const searchpro = (req, res) => {
@@ -313,7 +342,8 @@ module.exports = {
     viewallpro,
     deleteprobyadmin,
     editpeoduct,
-    getproduct
+    getproduct,
+    checkavailability
     //submitfeedback
     
 }

@@ -14,6 +14,8 @@ const sellercontroller=require("../controller/seller")
 const buyercomplaint=require("../controller/buyercomplaint")
 const announcement=require("../controller/Announcement")
 const adminActivities=require("../controller/adminactivity")
+const contactus=require("../controller/contact")
+
 const multer = require("multer");
 const authMiddleware = require('../middeware/auth')
 const path = require('path');
@@ -81,6 +83,10 @@ router.put('/update-feedback/:feedbackId', authMiddleware.loginRequird,feedbakCo
 router.post('/searchpro',productController.searchpro)
 router.put('/updateproduct/:id', authMiddleware.loginRequird,productController.editpeoduct)
 router.put('/getproduct/:productId', authMiddleware.loginRequird,productController.getproduct)
+router.post('/check-availability', authMiddleware.loginRequird,productController.checkavailability)
+
+
+
 router.get('/viewallorders',orderController.viewallorders)
 //router.get('/soldproducts/:userId',productController.soldproductsuserId)
 router.post('/addpro', upload.any(), authMiddleware.loginRequird,productController.addpro)
@@ -137,6 +143,11 @@ router.get('/seller/stats',authMiddleware.loginRequird,sellercontroller.sellerst
 
 
 router.get('/admin/activities',authMiddleware.loginRequird,adminActivities.adminActivities)
+
+
+
+router.post('/submit',authMiddleware.loginRequird,contactus.submit)
+router.get('/all',authMiddleware.loginRequird,contactus.all)
 
 
 

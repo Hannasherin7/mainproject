@@ -34,30 +34,34 @@ const adminActivities = async (req, res) => {
 
     // Format activities
     const activities = [
-      ...orders.map((order) => ({
-        type: "order",
-        message: `New order placed by ${order.userId.name} (${order.userId.email}) for ${order.productId.pname}`,
-        timestamp: order.createdAt,
-        details: {
-          buyer: order.userId.name,
-          seller: order.productId.userId.name, // Seller's name from the Product model
-          product: order.productId.pname,
-          quantity: order.orderQuantity,
-          totalAmount: order.productId.price * order.orderQuantity,
-        },
-      })),
-      ...feedbacks.map((feedback) => ({
-        type: "review",
-        message: `New review by ${feedback.userId.name} (${feedback.userId.email}): ${feedback.rating} stars for ${feedback.productId.pname}`,
-        timestamp: feedback.createdAt,
-        details: {
-          reviewer: feedback.userId.name,
-          seller: feedback.productId.userId.name, // Seller's name from the Product model
-          product: feedback.productId.pname,
-          rating: feedback.rating,
-          comment: feedback.comment,
-        },
-      })),
+      ...orders
+        .filter((order) => order.productId) // Filter out orders with null productId
+        .map((order) => ({
+          type: "order",
+          message: `New order placed by ${order.userId.name} (${order.userId.email}) for ${order.productId.pname}`,
+          timestamp: order.createdAt,
+          details: {
+            buyer: order.userId.name,
+            seller: order.productId.userId.name, // Seller's name from the Product model
+            product: order.productId.pname,
+            quantity: order.orderQuantity,
+            totalAmount: order.productId.price * order.orderQuantity,
+          },
+        })),
+      ...feedbacks
+        .filter((feedback) => feedback.productId) // Filter out feedbacks with null productId
+        .map((feedback) => ({
+          type: "review",
+          message: `New review by ${feedback.userId.name} (${feedback.userId.email}): ${feedback.rating} stars for ${feedback.productId.pname}`,
+          timestamp: feedback.createdAt,
+          details: {
+            reviewer: feedback.userId.name,
+            seller: feedback.productId.userId.name, // Seller's name from the Product model
+            product: feedback.productId.pname,
+            rating: feedback.rating,
+            comment: feedback.comment,
+          },
+        })),
     ];
 
     // Sort activities by timestamp
